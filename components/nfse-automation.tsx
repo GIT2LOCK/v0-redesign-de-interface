@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   FileSpreadsheet,
@@ -84,15 +84,6 @@ export function NFSeAutomation() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // Sincroniza o tema com a classe do documento
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }, [isDarkMode])
 
   const [logs, setLogs] = useState<LogEntry[]>([
     { id: 1, timestamp: "11:58:01", message: "Interface iniciada com sucesso. Aguardando arquivo...", type: "info" },
@@ -190,7 +181,7 @@ export function NFSeAutomation() {
       case "processing":
         return "bg-amber-500/20 text-amber-400 border-amber-500/30"
       default:
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30"
+        return "bg-cyan-500/20 text-cyan-400 border-cyan-500/30"
     }
   }
 
@@ -203,7 +194,7 @@ export function NFSeAutomation() {
       case "error":
         return <X className="w-4 h-4 text-red-400" />
       default:
-        return <Clock className="w-4 h-4 text-blue-400" />
+        return <Clock className="w-4 h-4 text-cyan-400" />
     }
   }
 
@@ -315,7 +306,7 @@ export function NFSeAutomation() {
                 className="mt-auto glass-card rounded-2xl p-4"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-500 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
                     <CheckCircle2 className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -328,7 +319,7 @@ export function NFSeAutomation() {
                     initial={{ width: 0 }}
                     animate={{ width: "98.5%" }}
                     transition={{ delay: 0.6, duration: 1 }}
-                    className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full"
+                    className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full"
                   />
                 </div>
               </motion.div>

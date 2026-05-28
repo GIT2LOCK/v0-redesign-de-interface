@@ -4,81 +4,83 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.13 0.02 260);
+  /* 2LOCK Brand Colors - Azul corporativo */
+  --background: oklch(0.12 0.025 250);
   --foreground: oklch(0.98 0 0);
-  --card: oklch(0.18 0.015 260 / 0.6);
+  --card: oklch(0.16 0.02 250 / 0.6);
   --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.16 0.02 260 / 0.95);
+  --popover: oklch(0.14 0.025 250 / 0.95);
   --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.65 0.2 195);
-  --primary-foreground: oklch(0.13 0.02 260);
-  --secondary: oklch(0.22 0.015 260 / 0.8);
+  --primary: oklch(0.62 0.19 250);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.20 0.02 250 / 0.8);
   --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.25 0.01 260 / 0.5);
+  --muted: oklch(0.22 0.015 250 / 0.5);
   --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.7 0.18 180);
-  --accent-foreground: oklch(0.13 0.02 260);
+  --accent: oklch(0.72 0.16 250);
+  --accent-foreground: oklch(0.12 0.025 250);
   --destructive: oklch(0.6 0.2 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.35 0.02 260 / 0.3);
-  --input: oklch(0.2 0.015 260 / 0.6);
-  --ring: oklch(0.65 0.2 195);
-  --chart-1: oklch(0.65 0.2 195);
-  --chart-2: oklch(0.7 0.18 180);
-  --chart-3: oklch(0.6 0.15 280);
+  --border: oklch(0.35 0.03 250 / 0.3);
+  --input: oklch(0.18 0.02 250 / 0.6);
+  --ring: oklch(0.62 0.19 250);
+  --chart-1: oklch(0.62 0.19 250);
+  --chart-2: oklch(0.72 0.16 250);
+  --chart-3: oklch(0.55 0.18 280);
   --chart-4: oklch(0.75 0.15 140);
   --chart-5: oklch(0.65 0.2 30);
   --radius: 1rem;
-  --sidebar: oklch(0.12 0.02 260 / 0.8);
+  --sidebar: oklch(0.10 0.025 250 / 0.8);
   --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.65 0.2 195);
-  --sidebar-primary-foreground: oklch(0.13 0.02 260);
-  --sidebar-accent: oklch(0.22 0.015 260 / 0.6);
+  --sidebar-primary: oklch(0.62 0.19 250);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.20 0.02 250 / 0.6);
   --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.35 0.02 260 / 0.2);
-  --sidebar-ring: oklch(0.65 0.2 195);
+  --sidebar-border: oklch(0.35 0.03 250 / 0.2);
+  --sidebar-ring: oklch(0.62 0.19 250);
   
-  /* Glass effect variables */
-  --glass-bg: oklch(0.18 0.015 260 / 0.4);
-  --glass-border: oklch(0.5 0.02 260 / 0.2);
-  --glass-shadow: 0 8px 32px oklch(0 0 0 / 0.3);
-  --glow-primary: oklch(0.65 0.2 195 / 0.5);
-  --glow-accent: oklch(0.7 0.18 180 / 0.4);
+  /* Glass effect variables - 2LOCK Blue theme */
+  --glass-bg: oklch(0.16 0.02 250 / 0.4);
+  --glass-border: oklch(0.5 0.03 250 / 0.2);
+  --glass-shadow: 0 8px 32px oklch(0 0 0 / 0.4);
+  --glow-primary: oklch(0.62 0.19 250 / 0.5);
+  --glow-accent: oklch(0.72 0.16 250 / 0.4);
 }
 
 .dark {
-  --background: oklch(0.13 0.02 260);
+  /* 2LOCK Brand Colors - Azul corporativo */
+  --background: oklch(0.12 0.025 250);
   --foreground: oklch(0.98 0 0);
-  --card: oklch(0.18 0.015 260 / 0.6);
+  --card: oklch(0.16 0.02 250 / 0.6);
   --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.16 0.02 260 / 0.95);
+  --popover: oklch(0.14 0.025 250 / 0.95);
   --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.65 0.2 195);
-  --primary-foreground: oklch(0.13 0.02 260);
-  --secondary: oklch(0.22 0.015 260 / 0.8);
+  --primary: oklch(0.62 0.19 250);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.20 0.02 250 / 0.8);
   --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.25 0.01 260 / 0.5);
+  --muted: oklch(0.22 0.015 250 / 0.5);
   --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.7 0.18 180);
-  --accent-foreground: oklch(0.13 0.02 260);
+  --accent: oklch(0.72 0.16 250);
+  --accent-foreground: oklch(0.12 0.025 250);
   --destructive: oklch(0.6 0.2 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.35 0.02 260 / 0.3);
-  --input: oklch(0.2 0.015 260 / 0.6);
-  --ring: oklch(0.65 0.2 195);
-  --chart-1: oklch(0.65 0.2 195);
-  --chart-2: oklch(0.7 0.18 180);
-  --chart-3: oklch(0.6 0.15 280);
+  --border: oklch(0.35 0.03 250 / 0.3);
+  --input: oklch(0.18 0.02 250 / 0.6);
+  --ring: oklch(0.62 0.19 250);
+  --chart-1: oklch(0.62 0.19 250);
+  --chart-2: oklch(0.72 0.16 250);
+  --chart-3: oklch(0.55 0.18 280);
   --chart-4: oklch(0.75 0.15 140);
   --chart-5: oklch(0.65 0.2 30);
-  --sidebar: oklch(0.12 0.02 260 / 0.8);
+  --sidebar: oklch(0.10 0.025 250 / 0.8);
   --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.65 0.2 195);
-  --sidebar-primary-foreground: oklch(0.13 0.02 260);
-  --sidebar-accent: oklch(0.22 0.015 260 / 0.6);
+  --sidebar-primary: oklch(0.62 0.19 250);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.20 0.02 250 / 0.6);
   --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.35 0.02 260 / 0.2);
-  --sidebar-ring: oklch(0.65 0.2 195);
+  --sidebar-border: oklch(0.35 0.03 250 / 0.2);
+  --sidebar-ring: oklch(0.62 0.19 250);
 }
 
 @theme inline {
@@ -140,35 +142,35 @@
 }
 
 .glass-card {
-  background: oklch(0.16 0.015 260 / 0.5);
+  background: oklch(0.14 0.02 250 / 0.5);
   backdrop-filter: blur(24px) saturate(200%);
   -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid oklch(0.5 0.02 260 / 0.15);
+  border: 1px solid oklch(0.5 0.03 250 / 0.15);
   box-shadow: var(--glass-shadow);
 }
 
 .glass-input {
-  background: oklch(0.12 0.015 260 / 0.6);
+  background: oklch(0.10 0.02 250 / 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid oklch(0.4 0.02 260 / 0.2);
+  border: 1px solid oklch(0.4 0.03 250 / 0.2);
 }
 
 /* Glow effects */
 .glow-primary {
-  box-shadow: 0 0 20px var(--glow-primary), 0 0 40px oklch(0.65 0.2 195 / 0.2);
+  box-shadow: 0 0 20px var(--glow-primary), 0 0 40px oklch(0.62 0.19 250 / 0.2);
 }
 
 .glow-accent {
-  box-shadow: 0 0 20px var(--glow-accent), 0 0 40px oklch(0.7 0.18 180 / 0.2);
+  box-shadow: 0 0 20px var(--glow-accent), 0 0 40px oklch(0.72 0.16 250 / 0.2);
 }
 
-/* Animated gradient background */
+/* Animated gradient background - 2LOCK Blue */
 .gradient-bg {
   background: 
-    radial-gradient(ellipse at 20% 20%, oklch(0.65 0.2 195 / 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, oklch(0.7 0.18 180 / 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, oklch(0.6 0.15 280 / 0.05) 0%, transparent 70%),
+    radial-gradient(ellipse at 20% 20%, oklch(0.62 0.19 250 / 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, oklch(0.72 0.16 250 / 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, oklch(0.55 0.18 280 / 0.05) 0%, transparent 70%),
     var(--background);
 }
 
@@ -179,17 +181,17 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: oklch(0.15 0.015 260 / 0.5);
+  background: oklch(0.13 0.02 250 / 0.5);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.35 0.02 260 / 0.6);
+  background: oklch(0.35 0.03 250 / 0.6);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.45 0.02 260 / 0.8);
+  background: oklch(0.45 0.03 250 / 0.8);
 }
 
 /* Animation utilities */

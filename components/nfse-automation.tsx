@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   FileSpreadsheet,
@@ -84,6 +84,15 @@ export function NFSeAutomation() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Sincroniza o tema com a classe do documento
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+  }, [isDarkMode])
 
   const [logs, setLogs] = useState<LogEntry[]>([
     { id: 1, timestamp: "11:58:01", message: "Interface iniciada com sucesso. Aguardando arquivo...", type: "info" },

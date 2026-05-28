@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """
 2LOCK - Automação NFS-e
-Design moderno com Glassmorphism, Acrylic e Vibrancy
+Design EXTREMAMENTE FIEL ao site 2lock.com.br
 Python 3.13 + PyQt6
+
+Cores extraídas diretamente do site:
+- Azul principal: #5599FF (rgb(85, 153, 255))
+- Fundo: #FFFFFF (branco)
+- Texto: #333333 (rgb(51, 51, 51))
+- Fonte: Saira (Google Fonts)
+- Border radius: 5px
 """
 
 import sys
-import os
 from datetime import datetime
 from typing import Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 from PyQt6.QtWidgets import (
@@ -17,17 +23,15 @@ from PyQt6.QtWidgets import (
     QLabel, QPushButton, QTableWidget, QTableWidgetItem, QTextEdit,
     QFileDialog, QFrame, QStackedWidget, QScrollArea, QLineEdit,
     QHeaderView, QGraphicsDropShadowEffect, QSizePolicy, QSpacerItem,
-    QProgressBar, QMessageBox
+    QProgressBar, QGraphicsOpacityEffect
 )
 from PyQt6.QtCore import (
-    Qt, QPropertyAnimation, QEasingCurve, QTimer, QPoint, QSize,
-    pyqtSignal, QParallelAnimationGroup, QSequentialAnimationGroup,
-    QAbstractAnimation
+    Qt, QPropertyAnimation, QEasingCurve, QTimer, QSize,
+    pyqtSignal, QParallelAnimationGroup, QPoint
 )
 from PyQt6.QtGui import (
-    QColor, QPalette, QFont, QFontDatabase, QIcon, QPainter,
-    QBrush, QLinearGradient, QRadialGradient, QPen, QPixmap,
-    QPainterPath, QRegion
+    QColor, QFont, QIcon, QPainter, QBrush, QLinearGradient,
+    QPen, QPixmap, QPainterPath
 )
 
 
@@ -64,526 +68,906 @@ class SpreadsheetRow:
     status: str
 
 
-# ============== TEMA E CORES ==============
+# ============== CORES EXATAS DO SITE 2LOCK ==============
 
 class Theme:
-    """Gerenciador de temas 2LOCK"""
+    """Cores extraídas diretamente de 2lock.com.br"""
     
-    # Cores da marca 2LOCK
-    BRAND_BLUE = "#3B82F6"
-    BRAND_BLUE_DARK = "#2563EB"
-    BRAND_BLUE_LIGHT = "#60A5FA"
+    # Cores principais do site
+    BLUE_PRIMARY = "#5599FF"      # rgb(85, 153, 255) - Botões principais
+    BLUE_HOVER = "#4488EE"        # Hover dos botões
+    BLUE_LIGHT = "#E8F1FF"        # Fundo claro azulado
     
-    @staticmethod
-    def get_dark_theme() -> dict:
+    WHITE = "#FFFFFF"             # Fundo principal
+    GRAY_BG = "#F8FAFC"          # Fundo secundário (cinza bem claro)
+    
+    TEXT_DARK = "#333333"         # rgb(51, 51, 51) - Texto principal
+    TEXT_SECONDARY = "#6B7280"    # Texto secundário
+    TEXT_LIGHT = "#9CA3AF"        # Texto terciário
+    
+    BORDER = "#E5E7EB"            # Bordas
+    BORDER_LIGHT = "#F3F4F6"      # Bordas mais claras
+    
+    SUCCESS = "#10B981"           # Verde sucesso
+    WARNING = "#F59E0B"           # Amarelo warning
+    ERROR = "#EF4444"             # Vermelho erro
+    
+    # Border radius padrão do site
+    RADIUS = "5px"
+    RADIUS_LG = "10px"
+    
+    # Fonte do site
+    FONT_FAMILY = "Segoe UI"  # Fallback para Saira
+    
+    @classmethod
+    def get_light_theme(cls) -> dict:
+        """Tema claro - Padrão do site 2LOCK"""
         return {
-            "background": "#0f172a",
-            "background_secondary": "#1e293b",
-            "card": "rgba(30, 41, 59, 0.6)",
-            "card_solid": "#1e293b",
-            "foreground": "#f8fafc",
-            "foreground_secondary": "#94a3b8",
-            "primary": "#3B82F6",
-            "primary_hover": "#2563EB",
-            "primary_light": "#60A5FA",
-            "accent": "#818CF8",
-            "success": "#10B981",
-            "warning": "#F59E0B",
-            "error": "#EF4444",
-            "border": "rgba(71, 85, 105, 0.4)",
-            "input": "rgba(15, 23, 42, 0.6)",
-            "glass_bg": "rgba(30, 41, 59, 0.4)",
-            "glass_border": "rgba(71, 85, 105, 0.3)",
-            "glow": "rgba(59, 130, 246, 0.5)",
+            "background": cls.WHITE,
+            "background_secondary": cls.GRAY_BG,
+            "card": cls.WHITE,
+            "foreground": cls.TEXT_DARK,
+            "foreground_secondary": cls.TEXT_SECONDARY,
+            "primary": cls.BLUE_PRIMARY,
+            "primary_hover": cls.BLUE_HOVER,
+            "primary_light": cls.BLUE_LIGHT,
+            "success": cls.SUCCESS,
+            "warning": cls.WARNING,
+            "error": cls.ERROR,
+            "border": cls.BORDER,
+            "border_light": cls.BORDER_LIGHT,
+            "input_bg": cls.WHITE,
+            "shadow": "rgba(0, 0, 0, 0.08)",
         }
     
-    @staticmethod
-    def get_light_theme() -> dict:
+    @classmethod
+    def get_dark_theme(cls) -> dict:
+        """Tema escuro - Versão dark do site"""
         return {
-            "background": "#f8fafc",
-            "background_secondary": "#e2e8f0",
-            "card": "rgba(255, 255, 255, 0.8)",
-            "card_solid": "#ffffff",
-            "foreground": "#0f172a",
-            "foreground_secondary": "#475569",
-            "primary": "#2563EB",
-            "primary_hover": "#1D4ED8",
-            "primary_light": "#3B82F6",
-            "accent": "#6366F1",
-            "success": "#059669",
-            "warning": "#D97706",
-            "error": "#DC2626",
-            "border": "rgba(203, 213, 225, 0.6)",
-            "input": "rgba(241, 245, 249, 0.8)",
-            "glass_bg": "rgba(255, 255, 255, 0.6)",
-            "glass_border": "rgba(203, 213, 225, 0.4)",
-            "glow": "rgba(37, 99, 235, 0.3)",
+            "background": "#0F1629",
+            "background_secondary": "#1A2744",
+            "card": "#1E2D4D",
+            "foreground": "#FFFFFF",
+            "foreground_secondary": "#A0AEC0",
+            "primary": cls.BLUE_PRIMARY,
+            "primary_hover": cls.BLUE_HOVER,
+            "primary_light": "#1E3A5F",
+            "success": cls.SUCCESS,
+            "warning": cls.WARNING,
+            "error": cls.ERROR,
+            "border": "#2D3E5F",
+            "border_light": "#1E2D4D",
+            "input_bg": "#0F1629",
+            "shadow": "rgba(0, 0, 0, 0.3)",
         }
 
 
-# ============== COMPONENTES BASE ==============
+# ============== WIDGETS CUSTOMIZADOS ==============
 
-class GlassCard(QFrame):
-    """Card com efeito Glassmorphism"""
+class Logo2Lock(QWidget):
+    """Logo da 2LOCK fiel ao site"""
     
-    def __init__(self, parent=None):
+    def __init__(self, size: int = 40, parent=None):
         super().__init__(parent)
-        self.is_dark = True
-        self._setup_style()
+        self.size = size
+        self.setFixedSize(size, size)
+        self._is_dark = False
     
-    def _setup_style(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
-        self.setStyleSheet(f"""
-            GlassCard {{
-                background-color: {theme['glass_bg']};
-                border: 1px solid {theme['glass_border']};
-                border-radius: 16px;
-            }}
-        """)
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        self.update()
+    
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # Sombra
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(32)
-        shadow.setXOffset(0)
-        shadow.setYOffset(8)
-        shadow.setColor(QColor(0, 0, 0, 80 if self.is_dark else 40))
-        self.setGraphicsEffect(shadow)
-    
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self._setup_style()
+        # Fundo circular azul
+        painter.setBrush(QBrush(QColor(Theme.BLUE_PRIMARY)))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawEllipse(0, 0, self.size, self.size)
+        
+        # Texto "2L" branco
+        painter.setPen(QPen(QColor("#FFFFFF")))
+        font = QFont(Theme.FONT_FAMILY, int(self.size * 0.35), QFont.Weight.Bold)
+        painter.setFont(font)
+        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "2L")
 
 
-class GlowButton(QPushButton):
-    """Botão com efeito de glow"""
+class Button2Lock(QPushButton):
+    """Botão no estilo exato do site 2LOCK"""
     
-    def __init__(self, text: str, primary: bool = True, parent=None):
+    def __init__(self, text: str, variant: str = "primary", parent=None):
         super().__init__(text, parent)
-        self.primary = primary
-        self.is_dark = True
-        self._setup_style()
+        self.variant = variant
+        self._is_dark = False
+        self._apply_style()
         self.setCursor(Qt.CursorShape.PointingHandCursor)
     
-    def _setup_style(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
-        
-        if self.primary:
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        self._apply_style()
+    
+    def _apply_style(self):
+        if self.variant == "primary":
             self.setStyleSheet(f"""
-                GlowButton {{
-                    background-color: {theme['primary']};
-                    color: white;
+                QPushButton {{
+                    background-color: {Theme.BLUE_PRIMARY};
+                    color: #FFFFFF;
                     border: none;
-                    border-radius: 12px;
+                    border-radius: {Theme.RADIUS};
                     padding: 12px 24px;
+                    font-family: {Theme.FONT_FAMILY};
                     font-size: 14px;
                     font-weight: 600;
                 }}
-                GlowButton:hover {{
-                    background-color: {theme['primary_hover']};
+                QPushButton:hover {{
+                    background-color: {Theme.BLUE_HOVER};
                 }}
-                GlowButton:pressed {{
-                    background-color: {theme['primary']};
+                QPushButton:pressed {{
+                    background-color: #3377DD;
                 }}
             """)
-        else:
+        elif self.variant == "outline":
+            border_color = Theme.BLUE_PRIMARY
+            text_color = Theme.BLUE_PRIMARY if not self._is_dark else "#FFFFFF"
+            bg_hover = Theme.BLUE_LIGHT if not self._is_dark else "rgba(85, 153, 255, 0.1)"
             self.setStyleSheet(f"""
-                GlowButton {{
-                    background-color: {theme['glass_bg']};
-                    color: {theme['foreground']};
-                    border: 1px solid {theme['border']};
-                    border-radius: 12px;
-                    padding: 12px 24px;
+                QPushButton {{
+                    background-color: transparent;
+                    color: {text_color};
+                    border: 2px solid {border_color};
+                    border-radius: {Theme.RADIUS};
+                    padding: 10px 22px;
+                    font-family: {Theme.FONT_FAMILY};
+                    font-size: 14px;
+                    font-weight: 600;
+                }}
+                QPushButton:hover {{
+                    background-color: {bg_hover};
+                }}
+            """)
+        elif self.variant == "ghost":
+            text_color = Theme.TEXT_DARK if not self._is_dark else "#FFFFFF"
+            self.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: transparent;
+                    color: {text_color};
+                    border: none;
+                    border-radius: {Theme.RADIUS};
+                    padding: 10px 16px;
+                    font-family: {Theme.FONT_FAMILY};
                     font-size: 14px;
                     font-weight: 500;
                 }}
-                GlowButton:hover {{
-                    background-color: {theme['card']};
-                    border-color: {theme['primary']};
+                QPushButton:hover {{
+                    background-color: {"#F3F4F6" if not self._is_dark else "rgba(255,255,255,0.1)"};
                 }}
             """)
-    
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self._setup_style()
 
 
-class IconButton(QPushButton):
-    """Botão de ícone circular"""
+class Card2Lock(QFrame):
+    """Card no estilo do site 2LOCK"""
     
-    def __init__(self, icon_char: str, parent=None):
-        super().__init__(icon_char, parent)
-        self.is_dark = True
-        self.setFixedSize(40, 40)
-        self._setup_style()
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._is_dark = False
+        self._apply_style()
     
-    def _setup_style(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        self._apply_style()
+    
+    def _apply_style(self):
+        theme = Theme.get_dark_theme() if self._is_dark else Theme.get_light_theme()
         self.setStyleSheet(f"""
-            IconButton {{
-                background-color: {theme['glass_bg']};
-                color: {theme['foreground']};
-                border: 1px solid {theme['border']};
-                border-radius: 20px;
-                font-size: 16px;
-            }}
-            IconButton:hover {{
-                background-color: {theme['card']};
-                border-color: {theme['primary']};
+            Card2Lock {{
+                background-color: {theme["card"]};
+                border: 1px solid {theme["border"]};
+                border-radius: {Theme.RADIUS_LG};
             }}
         """)
+        
+        # Sombra sutil como no site
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(20)
+        shadow.setXOffset(0)
+        shadow.setYOffset(4)
+        shadow.setColor(QColor(0, 0, 0, 25 if not self._is_dark else 50))
+        self.setGraphicsEffect(shadow)
+
+
+class NavTab2Lock(QPushButton):
+    """Tab de navegação no estilo do site"""
     
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self._setup_style()
+    def __init__(self, text: str, icon_text: str = "", parent=None):
+        super().__init__(parent)
+        self.setText(text)
+        self.icon_text = icon_text
+        self._is_active = False
+        self._is_dark = False
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedHeight(44)
+        self._apply_style()
+    
+    def set_active(self, active: bool):
+        self._is_active = active
+        self._apply_style()
+    
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        self._apply_style()
+    
+    def _apply_style(self):
+        if self._is_active:
+            bg = Theme.BLUE_PRIMARY
+            color = "#FFFFFF"
+        else:
+            bg = "transparent"
+            color = Theme.TEXT_SECONDARY if not self._is_dark else "#A0AEC0"
+        
+        hover_bg = Theme.BLUE_LIGHT if not self._is_dark else "rgba(85, 153, 255, 0.15)"
+        
+        self.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {bg};
+                color: {color};
+                border: none;
+                border-radius: {Theme.RADIUS};
+                padding: 8px 16px;
+                font-family: {Theme.FONT_FAMILY};
+                font-size: 14px;
+                font-weight: {"600" if self._is_active else "500"};
+                text-align: left;
+            }}
+            QPushButton:hover {{
+                background-color: {bg if self._is_active else hover_bg};
+                color: {color if self._is_active else Theme.BLUE_PRIMARY};
+            }}
+        """)
 
 
-class ModernLineEdit(QLineEdit):
-    """Input moderno com estilo glass"""
+class InputField2Lock(QLineEdit):
+    """Campo de input no estilo do site"""
     
     def __init__(self, placeholder: str = "", parent=None):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
-        self.is_dark = True
-        self._setup_style()
+        self._is_dark = False
+        self._apply_style()
     
-    def _setup_style(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        self._apply_style()
+    
+    def _apply_style(self):
+        theme = Theme.get_dark_theme() if self._is_dark else Theme.get_light_theme()
         self.setStyleSheet(f"""
-            ModernLineEdit {{
-                background-color: {theme['input']};
-                color: {theme['foreground']};
-                border: 1px solid {theme['border']};
-                border-radius: 12px;
-                padding: 12px 16px;
+            QLineEdit {{
+                background-color: {theme["input_bg"]};
+                color: {theme["foreground"]};
+                border: 1px solid {theme["border"]};
+                border-radius: {Theme.RADIUS};
+                padding: 10px 14px;
+                font-family: {Theme.FONT_FAMILY};
                 font-size: 14px;
             }}
-            ModernLineEdit:focus {{
-                border-color: {theme['primary']};
+            QLineEdit:focus {{
+                border: 2px solid {Theme.BLUE_PRIMARY};
+                padding: 9px 13px;
             }}
-            ModernLineEdit::placeholder {{
-                color: {theme['foreground_secondary']};
+            QLineEdit::placeholder {{
+                color: {theme["foreground_secondary"]};
             }}
         """)
-    
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self._setup_style()
-
-
-class TabButton(QPushButton):
-    """Botão de aba na sidebar"""
-    
-    def __init__(self, icon: str, text: str, parent=None):
-        super().__init__(parent)
-        self.icon_char = icon
-        self.text_label = text
-        self.is_active = False
-        self.is_dark = True
-        self.setText(f"  {icon}  {text}")
-        self.setFixedHeight(48)
-        self._setup_style()
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-    
-    def _setup_style(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
-        
-        if self.is_active:
-            self.setStyleSheet(f"""
-                TabButton {{
-                    background-color: {theme['primary']};
-                    color: white;
-                    border: none;
-                    border-radius: 12px;
-                    padding: 0 16px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    text-align: left;
-                }}
-            """)
-        else:
-            self.setStyleSheet(f"""
-                TabButton {{
-                    background-color: transparent;
-                    color: {theme['foreground_secondary']};
-                    border: none;
-                    border-radius: 12px;
-                    padding: 0 16px;
-                    font-size: 14px;
-                    font-weight: 500;
-                    text-align: left;
-                }}
-                TabButton:hover {{
-                    background-color: {theme['glass_bg']};
-                    color: {theme['foreground']};
-                }}
-            """)
-    
-    def set_active(self, active: bool):
-        self.is_active = active
-        self._setup_style()
-    
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self._setup_style()
 
 
 class StatusBadge(QLabel):
-    """Badge de status"""
+    """Badge de status como no site"""
     
-    def __init__(self, text: str, status: str = "info", parent=None):
+    def __init__(self, text: str, status: str = "default", parent=None):
         super().__init__(text, parent)
         self.status = status
-        self.is_dark = True
-        self._setup_style()
+        self._apply_style()
     
-    def _setup_style(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
-        
+    def set_status(self, status: str):
+        self.status = status
+        self._apply_style()
+    
+    def _apply_style(self):
         colors = {
-            "success": (theme['success'], "rgba(16, 185, 129, 0.2)"),
-            "error": (theme['error'], "rgba(239, 68, 68, 0.2)"),
-            "warning": (theme['warning'], "rgba(245, 158, 11, 0.2)"),
-            "info": (theme['primary'], "rgba(59, 130, 246, 0.2)"),
+            "success": (Theme.SUCCESS, "#ECFDF5", "#065F46"),
+            "warning": (Theme.WARNING, "#FFFBEB", "#92400E"),
+            "error": (Theme.ERROR, "#FEF2F2", "#991B1B"),
+            "info": (Theme.BLUE_PRIMARY, Theme.BLUE_LIGHT, "#1E40AF"),
+            "default": ("#6B7280", "#F3F4F6", "#374151"),
         }
         
-        fg, bg = colors.get(self.status, colors["info"])
+        border_color, bg_color, text_color = colors.get(self.status, colors["default"])
         
         self.setStyleSheet(f"""
-            StatusBadge {{
-                background-color: {bg};
-                color: {fg};
-                border: 1px solid {fg};
-                border-radius: 8px;
+            QLabel {{
+                background-color: {bg_color};
+                color: {text_color};
+                border: 1px solid {border_color}33;
+                border-radius: 12px;
                 padding: 4px 12px;
+                font-family: {Theme.FONT_FAMILY};
                 font-size: 12px;
                 font-weight: 600;
             }}
         """)
+
+
+# ============== SIDEBAR ==============
+
+class Sidebar(QFrame):
+    """Sidebar no estilo do site 2LOCK"""
     
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self._setup_style()
-
-
-# ============== WIDGETS DE CONTEÚDO ==============
-
-class DashboardWidget(QWidget):
-    """Widget do Dashboard principal"""
-    
-    file_selected = pyqtSignal(str)
-    process_clicked = pyqtSignal()
+    tab_changed = pyqtSignal(str)
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.is_dark = True
-        self.selected_file: Optional[str] = None
+        self._is_dark = False
+        self.setFixedWidth(260)
+        self._setup_ui()
+        self._apply_style()
+    
+    def _setup_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 20, 16, 20)
+        layout.setSpacing(8)
+        
+        # Logo e nome
+        header = QHBoxLayout()
+        header.setSpacing(12)
+        
+        self.logo = Logo2Lock(40)
+        header.addWidget(self.logo)
+        
+        brand_layout = QVBoxLayout()
+        brand_layout.setSpacing(0)
+        
+        self.brand_name = QLabel("2LOCK")
+        self.brand_name.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 18px;
+            font-weight: 700;
+            color: {Theme.TEXT_DARK};
+        """)
+        brand_layout.addWidget(self.brand_name)
+        
+        self.brand_subtitle = QLabel("Automação NFS-e")
+        self.brand_subtitle.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 12px;
+            color: {Theme.TEXT_SECONDARY};
+        """)
+        brand_layout.addWidget(self.brand_subtitle)
+        
+        header.addLayout(brand_layout)
+        header.addStretch()
+        
+        # Status online
+        self.status_dot = QLabel("●")
+        self.status_dot.setStyleSheet(f"color: {Theme.SUCCESS}; font-size: 10px;")
+        header.addWidget(self.status_dot)
+        
+        layout.addLayout(header)
+        
+        # Separador
+        separator = QFrame()
+        separator.setFixedHeight(1)
+        separator.setStyleSheet(f"background-color: {Theme.BORDER};")
+        layout.addWidget(separator)
+        layout.addSpacing(16)
+        
+        # Menu label
+        self.menu_label = QLabel("MENU")
+        self.menu_label.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 11px;
+            font-weight: 600;
+            color: {Theme.TEXT_LIGHT};
+            letter-spacing: 1px;
+        """)
+        layout.addWidget(self.menu_label)
+        layout.addSpacing(8)
+        
+        # Tabs de navegação
+        self.tabs = {}
+        tab_items = [
+            ("dashboard", "Dashboard", "📊"),
+            ("planilha", "Planilha", "📋"),
+            ("log", "Log de Execução", "📝"),
+            ("historico", "Histórico", "🕐"),
+            ("usuario", "Minha Conta", "👤"),
+        ]
+        
+        for tab_id, text, icon in tab_items:
+            tab = NavTab2Lock(f"  {icon}  {text}")
+            tab.clicked.connect(lambda checked, t=tab_id: self._on_tab_clicked(t))
+            self.tabs[tab_id] = tab
+            layout.addWidget(tab)
+        
+        self.tabs["dashboard"].set_active(True)
+        
+        layout.addStretch()
+        
+        # Card de estatísticas
+        self.stats_card = Card2Lock()
+        stats_layout = QVBoxLayout(self.stats_card)
+        stats_layout.setContentsMargins(16, 16, 16, 16)
+        stats_layout.setSpacing(12)
+        
+        stats_header = QHBoxLayout()
+        self.stats_icon = QLabel("✓")
+        self.stats_icon.setStyleSheet(f"""
+            background-color: {Theme.SUCCESS};
+            color: white;
+            border-radius: 15px;
+            padding: 5px;
+            font-size: 14px;
+            min-width: 30px;
+            max-width: 30px;
+            min-height: 30px;
+            max-height: 30px;
+        """)
+        self.stats_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        stats_header.addWidget(self.stats_icon)
+        
+        stats_text = QVBoxLayout()
+        stats_text.setSpacing(0)
+        self.stats_label = QLabel("Taxa de sucesso")
+        self.stats_label.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 12px;
+            color: {Theme.TEXT_SECONDARY};
+        """)
+        stats_text.addWidget(self.stats_label)
+        
+        self.stats_value = QLabel("98.5%")
+        self.stats_value.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 20px;
+            font-weight: 700;
+            color: {Theme.SUCCESS};
+        """)
+        stats_text.addWidget(self.stats_value)
+        
+        stats_header.addLayout(stats_text)
+        stats_header.addStretch()
+        stats_layout.addLayout(stats_header)
+        
+        # Barra de progresso
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setValue(98)
+        self.progress_bar.setTextVisible(False)
+        self.progress_bar.setFixedHeight(6)
+        self.progress_bar.setStyleSheet(f"""
+            QProgressBar {{
+                background-color: {Theme.BORDER};
+                border-radius: 3px;
+                border: none;
+            }}
+            QProgressBar::chunk {{
+                background-color: {Theme.SUCCESS};
+                border-radius: 3px;
+            }}
+        """)
+        stats_layout.addWidget(self.progress_bar)
+        
+        layout.addWidget(self.stats_card)
+        
+        # Botão tema
+        layout.addSpacing(12)
+        self.theme_btn = Button2Lock("☀️  Tema Claro", "ghost")
+        self.theme_btn.clicked.connect(self._toggle_theme)
+        layout.addWidget(self.theme_btn)
+    
+    def _on_tab_clicked(self, tab_id: str):
+        for tid, tab in self.tabs.items():
+            tab.set_active(tid == tab_id)
+        self.tab_changed.emit(tab_id)
+    
+    def _toggle_theme(self):
+        self._is_dark = not self._is_dark
+        self.set_dark_mode(self._is_dark)
+        self.parent().set_dark_mode(self._is_dark)
+    
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        self._apply_style()
+        self.logo.set_dark_mode(is_dark)
+        self.stats_card.set_dark_mode(is_dark)
+        
+        for tab in self.tabs.values():
+            tab.set_dark_mode(is_dark)
+        
+        self.theme_btn.setText("☀️  Tema Claro" if is_dark else "🌙  Tema Escuro")
+        self.theme_btn.set_dark_mode(is_dark)
+        
+        theme = Theme.get_dark_theme() if is_dark else Theme.get_light_theme()
+        self.brand_name.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 18px;
+            font-weight: 700;
+            color: {theme["foreground"]};
+        """)
+        self.brand_subtitle.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 12px;
+            color: {theme["foreground_secondary"]};
+        """)
+        self.menu_label.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 11px;
+            font-weight: 600;
+            color: {theme["foreground_secondary"]};
+            letter-spacing: 1px;
+        """)
+        self.stats_label.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 12px;
+            color: {theme["foreground_secondary"]};
+        """)
+    
+    def _apply_style(self):
+        theme = Theme.get_dark_theme() if self._is_dark else Theme.get_light_theme()
+        self.setStyleSheet(f"""
+            Sidebar {{
+                background-color: {theme["background"]};
+                border-right: 1px solid {theme["border"]};
+            }}
+        """)
+
+
+# ============== PÁGINAS DE CONTEÚDO ==============
+
+class DashboardPage(QWidget):
+    """Página Dashboard"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._is_dark = False
         self._setup_ui()
     
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(24)
         
-        # Área de upload
-        self.upload_card = GlassCard()
+        # Header
+        header = QHBoxLayout()
+        
+        title_section = QVBoxLayout()
+        title_section.setSpacing(4)
+        
+        self.title = QLabel("Dashboard")
+        self.title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {Theme.TEXT_DARK};
+        """)
+        title_section.addWidget(self.title)
+        
+        self.subtitle = QLabel("Gerencie suas notas fiscais de serviço eletrônicas")
+        self.subtitle.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 14px;
+            color: {Theme.TEXT_SECONDARY};
+        """)
+        title_section.addWidget(self.subtitle)
+        
+        header.addLayout(title_section)
+        header.addStretch()
+        
+        layout.addLayout(header)
+        
+        # Upload Card
+        self.upload_card = Card2Lock()
         upload_layout = QVBoxLayout(self.upload_card)
         upload_layout.setContentsMargins(32, 32, 32, 32)
         upload_layout.setSpacing(16)
         
-        # Ícone de upload
+        # Área de upload
+        self.upload_area = QFrame()
+        self.upload_area.setFixedHeight(180)
+        self.upload_area.setStyleSheet(f"""
+            QFrame {{
+                background-color: {Theme.GRAY_BG};
+                border: 2px dashed {Theme.BORDER};
+                border-radius: {Theme.RADIUS_LG};
+            }}
+            QFrame:hover {{
+                border-color: {Theme.BLUE_PRIMARY};
+                background-color: {Theme.BLUE_LIGHT};
+            }}
+        """)
+        
+        upload_content = QVBoxLayout(self.upload_area)
+        upload_content.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        upload_content.setSpacing(12)
+        
         upload_icon = QLabel("📁")
         upload_icon.setStyleSheet("font-size: 48px;")
         upload_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        upload_content.addWidget(upload_icon)
         
-        # Texto
-        self.upload_text = QLabel("Arraste uma planilha Excel aqui ou clique para selecionar")
+        self.upload_text = QLabel("Arraste sua planilha Excel aqui")
+        self.upload_text.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 16px;
+            font-weight: 600;
+            color: {Theme.TEXT_DARK};
+        """)
         self.upload_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        upload_content.addWidget(self.upload_text)
         
-        # Botão selecionar
-        self.select_btn = GlowButton("Selecionar Planilha Excel")
-        self.select_btn.clicked.connect(self._select_file)
+        self.upload_hint = QLabel("ou clique para selecionar um arquivo")
+        self.upload_hint.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 13px;
+            color: {Theme.TEXT_SECONDARY};
+        """)
+        self.upload_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        upload_content.addWidget(self.upload_hint)
         
-        upload_layout.addWidget(upload_icon)
-        upload_layout.addWidget(self.upload_text)
-        upload_layout.addWidget(self.select_btn, alignment=Qt.AlignmentFlag.AlignCenter)
+        upload_layout.addWidget(self.upload_area)
         
-        # Card de arquivo selecionado
-        self.file_card = GlassCard()
-        self.file_card.setVisible(False)
-        file_layout = QHBoxLayout(self.file_card)
-        file_layout.setContentsMargins(20, 16, 20, 16)
+        # Arquivo selecionado
+        self.file_info = QFrame()
+        self.file_info.setVisible(False)
+        file_info_layout = QHBoxLayout(self.file_info)
+        file_info_layout.setContentsMargins(16, 12, 16, 12)
         
-        file_icon = QLabel("📄")
-        file_icon.setStyleSheet("font-size: 24px;")
+        self.file_icon = QLabel("📄")
+        self.file_icon.setStyleSheet("font-size: 24px;")
+        file_info_layout.addWidget(self.file_icon)
         
-        self.file_name_label = QLabel("")
-        self.file_size_label = QLabel("")
+        file_text_layout = QVBoxLayout()
+        file_text_layout.setSpacing(2)
+        self.file_name = QLabel("arquivo.xlsx")
+        self.file_name.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 14px;
+            font-weight: 600;
+            color: {Theme.TEXT_DARK};
+        """)
+        file_text_layout.addWidget(self.file_name)
         
-        file_info_layout = QVBoxLayout()
-        file_info_layout.addWidget(self.file_name_label)
-        file_info_layout.addWidget(self.file_size_label)
+        self.file_size = QLabel("2.4 MB")
+        self.file_size.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 12px;
+            color: {Theme.TEXT_SECONDARY};
+        """)
+        file_text_layout.addWidget(self.file_size)
+        file_info_layout.addLayout(file_text_layout)
         
-        remove_btn = IconButton("✕")
-        remove_btn.clicked.connect(self._remove_file)
+        file_info_layout.addStretch()
         
-        file_layout.addWidget(file_icon)
-        file_layout.addLayout(file_info_layout)
-        file_layout.addStretch()
-        file_layout.addWidget(remove_btn)
+        self.remove_file_btn = Button2Lock("✕", "ghost")
+        self.remove_file_btn.setFixedSize(32, 32)
+        file_info_layout.addWidget(self.remove_file_btn)
+        
+        upload_layout.addWidget(self.file_info)
         
         # Botões de ação
-        actions_layout = QHBoxLayout()
-        actions_layout.setSpacing(16)
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(12)
         
-        self.process_btn = GlowButton("Confirmar e Processar")
-        self.process_btn.setEnabled(False)
-        self.process_btn.clicked.connect(self._process)
+        self.select_btn = Button2Lock("📂  Selecionar Planilha", "outline")
+        self.select_btn.clicked.connect(self._select_file)
+        btn_layout.addWidget(self.select_btn)
         
-        self.clear_btn = GlowButton("Limpar", primary=False)
-        self.clear_btn.clicked.connect(self._remove_file)
+        self.process_btn = Button2Lock("⚡  Confirmar e Processar", "primary")
+        self.process_btn.clicked.connect(self._process_file)
+        btn_layout.addWidget(self.process_btn)
         
-        actions_layout.addStretch()
-        actions_layout.addWidget(self.clear_btn)
-        actions_layout.addWidget(self.process_btn)
+        btn_layout.addStretch()
+        upload_layout.addLayout(btn_layout)
         
         layout.addWidget(self.upload_card)
-        layout.addWidget(self.file_card)
-        layout.addStretch()
-        layout.addLayout(actions_layout)
         
-        self._update_styles()
-    
-    def _update_styles(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
-        self.upload_text.setStyleSheet(f"color: {theme['foreground_secondary']}; font-size: 14px;")
-        self.file_name_label.setStyleSheet(f"color: {theme['foreground']}; font-size: 14px; font-weight: 600;")
-        self.file_size_label.setStyleSheet(f"color: {theme['foreground_secondary']}; font-size: 12px;")
+        # Preview do Log
+        self.log_card = Card2Lock()
+        log_layout = QVBoxLayout(self.log_card)
+        log_layout.setContentsMargins(24, 20, 24, 20)
+        log_layout.setSpacing(12)
+        
+        log_header = QHBoxLayout()
+        self.log_title = QLabel("📝  Log de Execução")
+        self.log_title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 16px;
+            font-weight: 600;
+            color: {Theme.TEXT_DARK};
+        """)
+        log_header.addWidget(self.log_title)
+        log_header.addStretch()
+        
+        self.clear_log_btn = Button2Lock("Limpar", "ghost")
+        self.clear_log_btn.clicked.connect(self._clear_log)
+        log_header.addWidget(self.clear_log_btn)
+        
+        log_layout.addLayout(log_header)
+        
+        self.log_preview = QTextEdit()
+        self.log_preview.setReadOnly(True)
+        self.log_preview.setFixedHeight(150)
+        self.log_preview.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: #1a1a2e;
+                color: #00ff88;
+                border: 1px solid {Theme.BORDER};
+                border-radius: {Theme.RADIUS};
+                padding: 12px;
+                font-family: 'Consolas', 'Monaco', monospace;
+                font-size: 13px;
+            }}
+        """)
+        self._add_log("Interface iniciada com sucesso. Aguardando arquivo...", LogType.INFO)
+        log_layout.addWidget(self.log_preview)
+        
+        layout.addWidget(self.log_card)
+        layout.addStretch()
     
     def _select_file(self):
         file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Selecionar Planilha Excel",
-            "",
-            "Excel Files (*.xlsx *.xls);;All Files (*)"
+            self, "Selecionar Planilha Excel", "",
+            "Arquivos Excel (*.xlsx *.xls);;Todos os arquivos (*.*)"
         )
         if file_path:
-            self.selected_file = file_path
+            import os
             file_name = os.path.basename(file_path)
-            file_size = os.path.getsize(file_path)
-            
-            self.file_name_label.setText(file_name)
-            self.file_size_label.setText(f"{file_size / 1024:.1f} KB")
-            
-            self.upload_card.setVisible(False)
-            self.file_card.setVisible(True)
-            self.process_btn.setEnabled(True)
-            
-            self.file_selected.emit(file_path)
+            self.file_name.setText(file_name)
+            self.file_info.setVisible(True)
+            self._add_log(f"Arquivo selecionado: {file_name}", LogType.SUCCESS)
     
-    def _remove_file(self):
-        self.selected_file = None
-        self.upload_card.setVisible(True)
-        self.file_card.setVisible(False)
-        self.process_btn.setEnabled(False)
+    def _process_file(self):
+        self._add_log("Iniciando processamento...", LogType.INFO)
+        QTimer.singleShot(500, lambda: self._add_log("Validando dados da planilha...", LogType.INFO))
+        QTimer.singleShot(1000, lambda: self._add_log("Processamento concluído com sucesso!", LogType.SUCCESS))
     
-    def _process(self):
-        self.process_clicked.emit()
+    def _clear_log(self):
+        self.log_preview.clear()
+        self._add_log("Log limpo.", LogType.INFO)
     
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self.upload_card.set_theme(is_dark)
-        self.file_card.set_theme(is_dark)
-        self.select_btn.set_theme(is_dark)
-        self.process_btn.set_theme(is_dark)
-        self.clear_btn.set_theme(is_dark)
-        self._update_styles()
+    def _add_log(self, message: str, log_type: LogType = LogType.INFO):
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        colors = {
+            LogType.INFO: "#00bfff",
+            LogType.SUCCESS: "#00ff88",
+            LogType.WARNING: "#ffaa00",
+            LogType.ERROR: "#ff4444",
+        }
+        color = colors.get(log_type, "#00bfff")
+        self.log_preview.append(f'<span style="color: #888;">{timestamp}</span> - <span style="color: {color};">{message}</span>')
+    
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        theme = Theme.get_dark_theme() if is_dark else Theme.get_light_theme()
+        
+        self.title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {theme["foreground"]};
+        """)
+        self.subtitle.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 14px;
+            color: {theme["foreground_secondary"]};
+        """)
+        self.upload_text.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 16px;
+            font-weight: 600;
+            color: {theme["foreground"]};
+        """)
+        self.upload_hint.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 13px;
+            color: {theme["foreground_secondary"]};
+        """)
+        self.log_title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 16px;
+            font-weight: 600;
+            color: {theme["foreground"]};
+        """)
+        self.file_name.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 14px;
+            font-weight: 600;
+            color: {theme["foreground"]};
+        """)
+        
+        self.upload_card.set_dark_mode(is_dark)
+        self.log_card.set_dark_mode(is_dark)
+        self.select_btn.set_dark_mode(is_dark)
+        self.clear_log_btn.set_dark_mode(is_dark)
+        self.remove_file_btn.set_dark_mode(is_dark)
+        
+        # Upload area
+        if is_dark:
+            self.upload_area.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {theme["background_secondary"]};
+                    border: 2px dashed {theme["border"]};
+                    border-radius: {Theme.RADIUS_LG};
+                }}
+                QFrame:hover {{
+                    border-color: {Theme.BLUE_PRIMARY};
+                    background-color: {theme["primary_light"]};
+                }}
+            """)
+        else:
+            self.upload_area.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {Theme.GRAY_BG};
+                    border: 2px dashed {Theme.BORDER};
+                    border-radius: {Theme.RADIUS_LG};
+                }}
+                QFrame:hover {{
+                    border-color: {Theme.BLUE_PRIMARY};
+                    background-color: {Theme.BLUE_LIGHT};
+                }}
+            """)
 
 
-class SpreadsheetWidget(QWidget):
-    """Widget de visualização da planilha"""
+class SpreadsheetPage(QWidget):
+    """Página de visualização da Planilha"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.is_dark = True
+        self._is_dark = False
         self._setup_ui()
     
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
+        layout.setContentsMargins(32, 24, 32, 24)
+        layout.setSpacing(24)
         
-        # Header com busca
-        header_layout = QHBoxLayout()
+        # Header
+        header = QHBoxLayout()
         
-        self.search_input = ModernLineEdit("Buscar na planilha...")
-        self.search_input.setMaximumWidth(300)
+        self.title = QLabel("📋  Planilha")
+        self.title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {Theme.TEXT_DARK};
+        """)
+        header.addWidget(self.title)
+        header.addStretch()
         
-        self.export_btn = GlowButton("Exportar", primary=False)
+        self.search_input = InputField2Lock("🔍  Buscar na planilha...")
+        self.search_input.setFixedWidth(300)
+        header.addWidget(self.search_input)
         
-        header_layout.addWidget(self.search_input)
-        header_layout.addStretch()
-        header_layout.addWidget(self.export_btn)
+        layout.addLayout(header)
         
         # Tabela
-        self.table_card = GlassCard()
-        table_layout = QVBoxLayout(self.table_card)
-        table_layout.setContentsMargins(0, 0, 0, 0)
+        self.card = Card2Lock()
+        card_layout = QVBoxLayout(self.card)
+        card_layout.setContentsMargins(0, 0, 0, 0)
         
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["ID", "Empresa", "CNPJ", "Valor", "Status"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self.table.verticalHeader().setVisible(False)
+        self._apply_table_style()
         
-        table_layout.addWidget(self.table)
-        
-        layout.addLayout(header_layout)
-        layout.addWidget(self.table_card)
-        
-        self._update_styles()
-        self._load_sample_data()
-    
-    def _update_styles(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
-        self.table.setStyleSheet(f"""
-            QTableWidget {{
-                background-color: transparent;
-                color: {theme['foreground']};
-                border: none;
-                gridline-color: {theme['border']};
-                font-size: 13px;
-            }}
-            QTableWidget::item {{
-                padding: 12px;
-                border-bottom: 1px solid {theme['border']};
-            }}
-            QTableWidget::item:selected {{
-                background-color: {theme['primary']};
-                color: white;
-            }}
-            QTableWidget::item:alternate {{
-                background-color: {theme['glass_bg']};
-            }}
-            QHeaderView::section {{
-                background-color: {theme['card_solid']};
-                color: {theme['foreground']};
-                padding: 12px;
-                border: none;
-                border-bottom: 2px solid {theme['primary']};
-                font-weight: 600;
-            }}
-        """)
-    
-    def _load_sample_data(self):
+        # Dados de exemplo
         sample_data = [
-            ("1", "Empresa ABC Ltda", "12.345.678/0001-90", "R$ 1.500,00", "Processado"),
-            ("2", "Comércio XYZ ME", "98.765.432/0001-10", "R$ 2.300,00", "Processado"),
-            ("3", "Indústria 123 S/A", "11.222.333/0001-44", "R$ 5.000,00", "Pendente"),
-            ("4", "Serviços Tech Ltda", "55.666.777/0001-88", "R$ 800,00", "Erro"),
-            ("5", "Consultoria Plus", "99.888.777/0001-66", "R$ 3.200,00", "Processado"),
+            ("001", "Tech Solutions Ltda", "12.345.678/0001-90", "R$ 15.000,00", "Processado"),
+            ("002", "Inovação Digital SA", "98.765.432/0001-10", "R$ 8.500,00", "Pendente"),
+            ("003", "Serviços Cloud ME", "11.222.333/0001-44", "R$ 22.750,00", "Processado"),
+            ("004", "Consultoria Alfa", "55.666.777/0001-88", "R$ 5.200,00", "Erro"),
+            ("005", "Desenvolvimento Beta", "99.888.777/0001-22", "R$ 18.300,00", "Processado"),
         ]
         
         self.table.setRowCount(len(sample_data))
@@ -592,368 +976,431 @@ class SpreadsheetWidget(QWidget):
                 item = QTableWidgetItem(value)
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.table.setItem(row, col, item)
+        
+        card_layout.addWidget(self.table)
+        layout.addWidget(self.card)
     
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self.table_card.set_theme(is_dark)
-        self.search_input.set_theme(is_dark)
-        self.export_btn.set_theme(is_dark)
-        self._update_styles()
-
-
-class LogWidget(QWidget):
-    """Widget de Log de execução"""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.is_dark = True
-        self.logs: list[LogEntry] = []
-        self._setup_ui()
-        self._add_initial_log()
-    
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
-        
-        # Header
-        header_layout = QHBoxLayout()
-        
-        title = QLabel("Log de Execução")
-        title.setStyleSheet("font-size: 16px; font-weight: 600;")
-        
-        self.clear_btn = GlowButton("Limpar Log", primary=False)
-        self.clear_btn.clicked.connect(self.clear_logs)
-        
-        self.export_btn = GlowButton("Exportar", primary=False)
-        
-        header_layout.addWidget(title)
-        header_layout.addStretch()
-        header_layout.addWidget(self.clear_btn)
-        header_layout.addWidget(self.export_btn)
-        
-        # Área de log
-        self.log_card = GlassCard()
-        log_layout = QVBoxLayout(self.log_card)
-        log_layout.setContentsMargins(16, 16, 16, 16)
-        
-        self.log_text = QTextEdit()
-        self.log_text.setReadOnly(True)
-        self.log_text.setMinimumHeight(400)
-        
-        log_layout.addWidget(self.log_text)
-        
-        layout.addLayout(header_layout)
-        layout.addWidget(self.log_card)
-        
-        self._update_styles()
-    
-    def _update_styles(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
-        self.log_text.setStyleSheet(f"""
-            QTextEdit {{
-                background-color: {theme['input']};
-                color: {theme['foreground']};
-                border: 1px solid {theme['border']};
-                border-radius: 12px;
-                padding: 16px;
-                font-family: 'Consolas', 'Monaco', monospace;
-                font-size: 13px;
-            }}
-        """)
-    
-    def _add_initial_log(self):
-        self.add_log("Interface iniciada com sucesso. Aguardando arquivo...", LogType.INFO)
-    
-    def add_log(self, message: str, log_type: LogType = LogType.INFO):
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        entry = LogEntry(timestamp, message, log_type)
-        self.logs.append(entry)
-        self._update_log_display()
-    
-    def _update_log_display(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
-        
-        colors = {
-            LogType.INFO: theme['primary'],
-            LogType.SUCCESS: theme['success'],
-            LogType.WARNING: theme['warning'],
-            LogType.ERROR: theme['error'],
-        }
-        
-        icons = {
-            LogType.INFO: "ℹ️",
-            LogType.SUCCESS: "✅",
-            LogType.WARNING: "⚠️",
-            LogType.ERROR: "❌",
-        }
-        
-        html = ""
-        for log in self.logs:
-            color = colors.get(log.type, theme['foreground'])
-            icon = icons.get(log.type, "•")
-            html += f'<p style="color: {color}; margin: 4px 0;">'
-            html += f'<span style="color: {theme["foreground_secondary"]}">[{log.timestamp}]</span> '
-            html += f'{icon} {log.message}</p>'
-        
-        self.log_text.setHtml(html)
-        # Scroll para o final
-        self.log_text.verticalScrollBar().setValue(
-            self.log_text.verticalScrollBar().maximum()
-        )
-    
-    def clear_logs(self):
-        self.logs.clear()
-        self.log_text.clear()
-        self._add_initial_log()
-    
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self.log_card.set_theme(is_dark)
-        self.clear_btn.set_theme(is_dark)
-        self.export_btn.set_theme(is_dark)
-        self._update_styles()
-        self._update_log_display()
-
-
-class HistoryWidget(QWidget):
-    """Widget de Histórico de processamentos"""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.is_dark = True
-        self.history: list[HistoryEntry] = []
-        self._setup_ui()
-        self._load_sample_history()
-    
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
-        
-        # Header
-        header_layout = QHBoxLayout()
-        
-        title = QLabel("Histórico de Processamentos")
-        title.setStyleSheet("font-size: 16px; font-weight: 600;")
-        
-        self.search_input = ModernLineEdit("Buscar no histórico...")
-        self.search_input.setMaximumWidth(300)
-        
-        header_layout.addWidget(title)
-        header_layout.addStretch()
-        header_layout.addWidget(self.search_input)
-        
-        # Tabela
-        self.table_card = GlassCard()
-        table_layout = QVBoxLayout(self.table_card)
-        table_layout.setContentsMargins(0, 0, 0, 0)
-        
-        self.table = QTableWidget()
-        self.table.setColumnCount(6)
-        self.table.setHorizontalHeaderLabels(["ID", "Data/Hora", "Arquivo", "Registros", "Status", "Duração"])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self.table.verticalHeader().setVisible(False)
-        
-        table_layout.addWidget(self.table)
-        
-        layout.addLayout(header_layout)
-        layout.addWidget(self.table_card)
-        
-        self._update_styles()
-    
-    def _update_styles(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
+    def _apply_table_style(self):
+        theme = Theme.get_dark_theme() if self._is_dark else Theme.get_light_theme()
         self.table.setStyleSheet(f"""
             QTableWidget {{
-                background-color: transparent;
-                color: {theme['foreground']};
+                background-color: {theme["card"]};
+                color: {theme["foreground"]};
                 border: none;
-                gridline-color: {theme['border']};
+                gridline-color: {theme["border"]};
+                font-family: {Theme.FONT_FAMILY};
                 font-size: 13px;
             }}
             QTableWidget::item {{
                 padding: 12px;
-                border-bottom: 1px solid {theme['border']};
+                border-bottom: 1px solid {theme["border"]};
             }}
             QTableWidget::item:selected {{
-                background-color: {theme['primary']};
-                color: white;
-            }}
-            QTableWidget::item:alternate {{
-                background-color: {theme['glass_bg']};
+                background-color: {Theme.BLUE_LIGHT if not self._is_dark else theme["primary_light"]};
+                color: {theme["foreground"]};
             }}
             QHeaderView::section {{
-                background-color: {theme['card_solid']};
-                color: {theme['foreground']};
-                padding: 12px;
+                background-color: {theme["background_secondary"]};
+                color: {theme["foreground"]};
+                padding: 14px;
                 border: none;
-                border-bottom: 2px solid {theme['primary']};
+                border-bottom: 2px solid {theme["border"]};
                 font-weight: 600;
+                font-size: 13px;
             }}
         """)
     
-    def _load_sample_history(self):
-        sample = [
-            ("1", "28/05/2026 14:32", "notas_maio.xlsx", "150", "Sucesso", "2m 34s"),
-            ("2", "27/05/2026 09:15", "clientes_abril.xlsx", "89", "Sucesso", "1m 12s"),
-            ("3", "26/05/2026 16:45", "servicos_q2.xlsx", "234", "Erro Parcial", "4m 56s"),
-            ("4", "25/05/2026 11:20", "faturamento.xlsx", "67", "Sucesso", "0m 45s"),
-        ]
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        theme = Theme.get_dark_theme() if is_dark else Theme.get_light_theme()
         
-        self.table.setRowCount(len(sample))
-        for row, data in enumerate(sample):
-            for col, value in enumerate(data):
-                item = QTableWidgetItem(value)
-                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.table.setItem(row, col, item)
-    
-    def add_entry(self, file_name: str, records: int, status: str, duration: str):
-        entry = HistoryEntry(
-            id=len(self.history) + 1,
-            date=datetime.now().strftime("%d/%m/%Y %H:%M"),
-            file=file_name,
-            records=records,
-            status=status,
-            duration=duration
-        )
-        self.history.append(entry)
+        self.title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {theme["foreground"]};
+        """)
         
-        row = self.table.rowCount()
-        self.table.insertRow(row)
-        data = (str(entry.id), entry.date, entry.file, str(entry.records), entry.status, entry.duration)
-        for col, value in enumerate(data):
-            item = QTableWidgetItem(value)
-            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.table.setItem(row, col, item)
-    
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self.table_card.set_theme(is_dark)
-        self.search_input.set_theme(is_dark)
-        self._update_styles()
+        self.card.set_dark_mode(is_dark)
+        self.search_input.set_dark_mode(is_dark)
+        self._apply_table_style()
 
 
-class UserWidget(QWidget):
-    """Widget de perfil do usuário"""
+class LogPage(QWidget):
+    """Página de Log completo"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.is_dark = True
+        self._is_dark = False
         self._setup_ui()
     
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(32, 24, 32, 24)
         layout.setSpacing(24)
         
-        # Card do perfil
-        profile_card = GlassCard()
-        self.profile_card = profile_card
-        profile_layout = QHBoxLayout(profile_card)
-        profile_layout.setContentsMargins(32, 32, 32, 32)
-        profile_layout.setSpacing(24)
+        # Header
+        header = QHBoxLayout()
+        
+        self.title = QLabel("📝  Log de Execução")
+        self.title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {Theme.TEXT_DARK};
+        """)
+        header.addWidget(self.title)
+        header.addStretch()
+        
+        self.export_btn = Button2Lock("📤  Exportar Log", "outline")
+        header.addWidget(self.export_btn)
+        
+        self.clear_btn = Button2Lock("🗑️  Limpar", "ghost")
+        header.addWidget(self.clear_btn)
+        
+        layout.addLayout(header)
+        
+        # Log completo
+        self.card = Card2Lock()
+        card_layout = QVBoxLayout(self.card)
+        card_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.log_text = QTextEdit()
+        self.log_text.setReadOnly(True)
+        self.log_text.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: #0d1117;
+                color: #00ff88;
+                border: none;
+                border-radius: {Theme.RADIUS_LG};
+                padding: 20px;
+                font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                font-size: 13px;
+                line-height: 1.6;
+            }}
+        """)
+        
+        # Logs de exemplo
+        logs = [
+            ("10:30:15", "Sistema inicializado com sucesso", "info"),
+            ("10:30:16", "Conexão com servidor estabelecida", "success"),
+            ("10:31:02", "Arquivo 'dados_nfse.xlsx' carregado", "info"),
+            ("10:31:03", "Validação de dados iniciada...", "info"),
+            ("10:31:05", "127 registros encontrados", "info"),
+            ("10:31:10", "Processamento em lote iniciado", "info"),
+            ("10:32:45", "Registro #45 - Alerta: CNPJ com formato antigo", "warning"),
+            ("10:35:20", "Processamento concluído: 126 sucesso, 1 alerta", "success"),
+        ]
+        
+        for time, msg, log_type in logs:
+            colors = {"info": "#00bfff", "success": "#00ff88", "warning": "#ffaa00", "error": "#ff4444"}
+            color = colors.get(log_type, "#00bfff")
+            self.log_text.append(f'<span style="color: #586069;">[{time}]</span> <span style="color: {color};">{msg}</span>')
+        
+        card_layout.addWidget(self.log_text)
+        layout.addWidget(self.card)
+    
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        theme = Theme.get_dark_theme() if is_dark else Theme.get_light_theme()
+        
+        self.title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {theme["foreground"]};
+        """)
+        
+        self.card.set_dark_mode(is_dark)
+        self.export_btn.set_dark_mode(is_dark)
+        self.clear_btn.set_dark_mode(is_dark)
+
+
+class HistoryPage(QWidget):
+    """Página de Histórico"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._is_dark = False
+        self._setup_ui()
+    
+    def _setup_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(32, 24, 32, 24)
+        layout.setSpacing(24)
+        
+        # Header
+        header = QHBoxLayout()
+        
+        self.title = QLabel("🕐  Histórico de Processamentos")
+        self.title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {Theme.TEXT_DARK};
+        """)
+        header.addWidget(self.title)
+        header.addStretch()
+        
+        layout.addLayout(header)
+        
+        # Cards de histórico
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
+        scroll_layout.setSpacing(16)
+        
+        history_items = [
+            ("28/05/2026 10:35", "relatorio_maio.xlsx", 127, "Concluído", "4m 15s"),
+            ("27/05/2026 15:20", "nfse_clientes.xlsx", 89, "Concluído", "2m 48s"),
+            ("27/05/2026 09:10", "dados_empresa.xlsx", 234, "Concluído", "6m 32s"),
+            ("26/05/2026 14:45", "backup_nfse.xlsx", 56, "Erro", "1m 20s"),
+            ("25/05/2026 11:00", "lote_mensal.xlsx", 312, "Concluído", "8m 55s"),
+        ]
+        
+        self.history_cards = []
+        for date, file, records, status, duration in history_items:
+            card = self._create_history_card(date, file, records, status, duration)
+            self.history_cards.append(card)
+            scroll_layout.addWidget(card)
+        
+        scroll_layout.addStretch()
+        scroll.setWidget(scroll_content)
+        layout.addWidget(scroll)
+    
+    def _create_history_card(self, date: str, file: str, records: int, status: str, duration: str) -> Card2Lock:
+        card = Card2Lock()
+        layout = QHBoxLayout(card)
+        layout.setContentsMargins(20, 16, 20, 16)
+        layout.setSpacing(20)
+        
+        # Ícone
+        icon = QLabel("📄")
+        icon.setStyleSheet("font-size: 32px;")
+        layout.addWidget(icon)
+        
+        # Info principal
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(4)
+        
+        file_label = QLabel(file)
+        file_label.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 15px;
+            font-weight: 600;
+            color: {Theme.TEXT_DARK};
+        """)
+        file_label.setProperty("class", "file_label")
+        info_layout.addWidget(file_label)
+        
+        meta_label = QLabel(f"{date}  •  {records} registros  •  {duration}")
+        meta_label.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 13px;
+            color: {Theme.TEXT_SECONDARY};
+        """)
+        meta_label.setProperty("class", "meta_label")
+        info_layout.addWidget(meta_label)
+        
+        layout.addLayout(info_layout)
+        layout.addStretch()
+        
+        # Status badge
+        status_type = "success" if status == "Concluído" else "error"
+        badge = StatusBadge(status, status_type)
+        layout.addWidget(badge)
+        
+        return card
+    
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        theme = Theme.get_dark_theme() if is_dark else Theme.get_light_theme()
+        
+        self.title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {theme["foreground"]};
+        """)
+        
+        for card in self.history_cards:
+            card.set_dark_mode(is_dark)
+            for label in card.findChildren(QLabel):
+                if label.property("class") == "file_label":
+                    label.setStyleSheet(f"""
+                        font-family: {Theme.FONT_FAMILY};
+                        font-size: 15px;
+                        font-weight: 600;
+                        color: {theme["foreground"]};
+                    """)
+                elif label.property("class") == "meta_label":
+                    label.setStyleSheet(f"""
+                        font-family: {Theme.FONT_FAMILY};
+                        font-size: 13px;
+                        color: {theme["foreground_secondary"]};
+                    """)
+
+
+class UserPage(QWidget):
+    """Página de Usuário / Minha Conta"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._is_dark = False
+        self._setup_ui()
+    
+    def _setup_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(32, 24, 32, 24)
+        layout.setSpacing(24)
+        
+        # Header
+        self.title = QLabel("👤  Minha Conta")
+        self.title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {Theme.TEXT_DARK};
+        """)
+        layout.addWidget(self.title)
+        
+        # Profile Card
+        self.profile_card = Card2Lock()
+        profile_layout = QHBoxLayout(self.profile_card)
+        profile_layout.setContentsMargins(24, 24, 24, 24)
+        profile_layout.setSpacing(20)
         
         # Avatar
         avatar = QLabel("👤")
-        avatar.setStyleSheet("""
-            font-size: 64px;
-            background-color: rgba(59, 130, 246, 0.2);
-            border-radius: 40px;
-            padding: 16px;
-        """)
-        avatar.setFixedSize(96, 96)
+        avatar.setFixedSize(80, 80)
         avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        avatar.setStyleSheet(f"""
+            background-color: {Theme.BLUE_LIGHT};
+            border-radius: 40px;
+            font-size: 36px;
+        """)
+        profile_layout.addWidget(avatar)
         
         # Info do usuário
-        info_layout = QVBoxLayout()
+        user_info = QVBoxLayout()
+        user_info.setSpacing(4)
         
-        self.name_label = QLabel("Usuário 2LOCK")
-        self.email_label = QLabel("usuario@2lock.com.br")
-        self.role_label = QLabel("Administrador")
+        self.user_name = QLabel("Administrador 2LOCK")
+        self.user_name.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 20px;
+            font-weight: 700;
+            color: {Theme.TEXT_DARK};
+        """)
+        user_info.addWidget(self.user_name)
         
-        info_layout.addWidget(self.name_label)
-        info_layout.addWidget(self.email_label)
-        info_layout.addWidget(self.role_label)
-        info_layout.addStretch()
+        self.user_email = QLabel("admin@2lock.com.br")
+        self.user_email.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 14px;
+            color: {Theme.TEXT_SECONDARY};
+        """)
+        user_info.addWidget(self.user_email)
         
-        # Botão editar
-        edit_btn = GlowButton("Editar Perfil", primary=False)
-        self.edit_btn = edit_btn
+        self.user_role = StatusBadge("Administrador", "info")
+        user_info.addWidget(self.user_role)
         
-        profile_layout.addWidget(avatar)
-        profile_layout.addLayout(info_layout)
+        profile_layout.addLayout(user_info)
         profile_layout.addStretch()
-        profile_layout.addWidget(edit_btn, alignment=Qt.AlignmentFlag.AlignTop)
         
-        # Cards de estatísticas
+        self.edit_btn = Button2Lock("✏️  Editar Perfil", "outline")
+        profile_layout.addWidget(self.edit_btn)
+        
+        layout.addWidget(self.profile_card)
+        
+        # Stats Cards
         stats_layout = QHBoxLayout()
         stats_layout.setSpacing(16)
         
-        self.stat_cards = []
-        stats = [
-            ("📊", "Total Processados", "1.234"),
-            ("✅", "Taxa de Sucesso", "98.5%"),
-            ("📅", "Último Acesso", "Hoje, 14:32"),
+        stats_data = [
+            ("📊", "Total Processados", "1.247", Theme.BLUE_PRIMARY),
+            ("✅", "Taxa de Sucesso", "98.5%", Theme.SUCCESS),
+            ("📅", "Este Mês", "127", Theme.WARNING),
         ]
         
-        for icon, title, value in stats:
-            card = GlassCard()
+        self.stat_cards = []
+        for icon, label, value, color in stats_data:
+            card = self._create_stat_card(icon, label, value, color)
             self.stat_cards.append(card)
-            card_layout = QVBoxLayout(card)
-            card_layout.setContentsMargins(24, 24, 24, 24)
-            
-            icon_label = QLabel(icon)
-            icon_label.setStyleSheet("font-size: 32px;")
-            
-            title_label = QLabel(title)
-            title_label.setObjectName("stat_title")
-            
-            value_label = QLabel(value)
-            value_label.setObjectName("stat_value")
-            
-            card_layout.addWidget(icon_label)
-            card_layout.addWidget(title_label)
-            card_layout.addWidget(value_label)
-            
             stats_layout.addWidget(card)
         
-        layout.addWidget(profile_card)
         layout.addLayout(stats_layout)
         layout.addStretch()
-        
-        self._update_styles()
     
-    def _update_styles(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
+    def _create_stat_card(self, icon: str, label: str, value: str, color: str) -> Card2Lock:
+        card = Card2Lock()
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(8)
         
-        self.name_label.setStyleSheet(f"color: {theme['foreground']}; font-size: 24px; font-weight: 700;")
-        self.email_label.setStyleSheet(f"color: {theme['foreground_secondary']}; font-size: 14px;")
-        self.role_label.setStyleSheet(f"""
-            color: {theme['primary']};
-            background-color: rgba(59, 130, 246, 0.2);
-            padding: 4px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
+        icon_label = QLabel(icon)
+        icon_label.setStyleSheet(f"font-size: 28px;")
+        layout.addWidget(icon_label)
+        
+        value_label = QLabel(value)
+        value_label.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {color};
+        """)
+        value_label.setProperty("class", "value_label")
+        value_label.setProperty("color", color)
+        layout.addWidget(value_label)
+        
+        text_label = QLabel(label)
+        text_label.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 13px;
+            color: {Theme.TEXT_SECONDARY};
+        """)
+        text_label.setProperty("class", "text_label")
+        layout.addWidget(text_label)
+        
+        return card
+    
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        theme = Theme.get_dark_theme() if is_dark else Theme.get_light_theme()
+        
+        self.title.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 28px;
+            font-weight: 700;
+            color: {theme["foreground"]};
+        """)
+        self.user_name.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 20px;
+            font-weight: 700;
+            color: {theme["foreground"]};
+        """)
+        self.user_email.setStyleSheet(f"""
+            font-family: {Theme.FONT_FAMILY};
+            font-size: 14px;
+            color: {theme["foreground_secondary"]};
         """)
         
+        self.profile_card.set_dark_mode(is_dark)
+        self.edit_btn.set_dark_mode(is_dark)
+        
         for card in self.stat_cards:
-            for child in card.findChildren(QLabel):
-                if child.objectName() == "stat_title":
-                    child.setStyleSheet(f"color: {theme['foreground_secondary']}; font-size: 13px;")
-                elif child.objectName() == "stat_value":
-                    child.setStyleSheet(f"color: {theme['foreground']}; font-size: 28px; font-weight: 700;")
-    
-    def set_theme(self, is_dark: bool):
-        self.is_dark = is_dark
-        self.profile_card.set_theme(is_dark)
-        self.edit_btn.set_theme(is_dark)
-        for card in self.stat_cards:
-            card.set_theme(is_dark)
-        self._update_styles()
+            card.set_dark_mode(is_dark)
+            for label in card.findChildren(QLabel):
+                if label.property("class") == "text_label":
+                    label.setStyleSheet(f"""
+                        font-family: {Theme.FONT_FAMILY};
+                        font-size: 13px;
+                        color: {theme["foreground_secondary"]};
+                    """)
 
 
 # ============== JANELA PRINCIPAL ==============
@@ -963,306 +1410,83 @@ class MainWindow(QMainWindow):
     
     def __init__(self):
         super().__init__()
-        self.is_dark = True
-        self.current_tab = "dashboard"
-        self._setup_window()
-        self._setup_ui()
-        self._connect_signals()
-    
-    def _setup_window(self):
+        self._is_dark = False
         self.setWindowTitle("2LOCK - Automação NFS-e")
-        self.setMinimumSize(1200, 800)
-        self.resize(1400, 900)
+        self.setMinimumSize(1200, 750)
+        self.resize(1400, 850)
         
-        # Remover borda padrão do Windows (opcional)
-        # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self._setup_ui()
+        self._apply_style()
     
     def _setup_ui(self):
-        # Widget central
         central = QWidget()
         self.setCentralWidget(central)
         
         main_layout = QHBoxLayout(central)
-        main_layout.setContentsMargins(16, 16, 16, 16)
-        main_layout.setSpacing(16)
-        
-        # ===== SIDEBAR =====
-        self.sidebar = GlassCard()
-        self.sidebar.setFixedWidth(280)
-        sidebar_layout = QVBoxLayout(self.sidebar)
-        sidebar_layout.setContentsMargins(16, 24, 16, 24)
-        sidebar_layout.setSpacing(8)
-        
-        # Logo
-        logo_layout = QHBoxLayout()
-        
-        logo_icon = QLabel("🔒")
-        logo_icon.setStyleSheet("font-size: 28px;")
-        
-        logo_text = QLabel("2LOCK")
-        self.logo_text = logo_text
-        
-        # Indicador online
-        status_dot = QLabel("●")
-        self.status_dot = status_dot
-        
-        logo_layout.addWidget(logo_icon)
-        logo_layout.addWidget(logo_text)
-        logo_layout.addWidget(status_dot)
-        logo_layout.addStretch()
-        
-        sidebar_layout.addLayout(logo_layout)
-        sidebar_layout.addSpacing(32)
-        
-        # Navegação
-        nav_label = QLabel("NAVEGAÇÃO")
-        self.nav_label = nav_label
-        sidebar_layout.addWidget(nav_label)
-        sidebar_layout.addSpacing(8)
-        
-        # Botões de aba
-        self.tab_buttons: dict[str, TabButton] = {}
-        tabs = [
-            ("dashboard", "📊", "Dashboard"),
-            ("spreadsheet", "📋", "Planilha"),
-            ("log", "📝", "Log"),
-            ("history", "🕐", "Histórico"),
-            ("user", "👤", "Usuário"),
-        ]
-        
-        for tab_id, icon, label in tabs:
-            btn = TabButton(icon, label)
-            btn.clicked.connect(lambda checked, t=tab_id: self._switch_tab(t))
-            self.tab_buttons[tab_id] = btn
-            sidebar_layout.addWidget(btn)
-        
-        self.tab_buttons["dashboard"].set_active(True)
-        
-        sidebar_layout.addStretch()
-        
-        # Card de estatísticas na sidebar
-        stats_card = GlassCard()
-        self.sidebar_stats_card = stats_card
-        stats_layout = QVBoxLayout(stats_card)
-        stats_layout.setContentsMargins(16, 16, 16, 16)
-        
-        stats_icon = QLabel("✅")
-        stats_icon.setStyleSheet("font-size: 24px;")
-        
-        stats_title = QLabel("Taxa de sucesso")
-        self.stats_title = stats_title
-        
-        stats_value = QLabel("98.5%")
-        self.stats_value = stats_value
-        
-        # Progress bar
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setValue(98)
-        self.progress_bar.setTextVisible(False)
-        self.progress_bar.setFixedHeight(8)
-        
-        stats_layout.addWidget(stats_icon)
-        stats_layout.addWidget(stats_title)
-        stats_layout.addWidget(stats_value)
-        stats_layout.addWidget(self.progress_bar)
-        
-        sidebar_layout.addWidget(stats_card)
-        
-        # ===== CONTEÚDO PRINCIPAL =====
-        content_area = QWidget()
-        content_layout = QVBoxLayout(content_area)
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setSpacing(16)
-        
-        # Header
-        header = QWidget()
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        
-        self.page_title = QLabel("Dashboard")
-        self.page_subtitle = QLabel("Gerencie suas automações de NFS-e")
-        
-        title_layout = QVBoxLayout()
-        title_layout.addWidget(self.page_title)
-        title_layout.addWidget(self.page_subtitle)
-        
-        # Botões do header
-        self.theme_btn = IconButton("🌙")
-        self.theme_btn.clicked.connect(self._toggle_theme)
-        
-        self.close_btn = IconButton("✕")
-        self.close_btn.clicked.connect(self.close)
-        
-        header_layout.addLayout(title_layout)
-        header_layout.addStretch()
-        header_layout.addWidget(self.theme_btn)
-        header_layout.addWidget(self.close_btn)
-        
-        # Stack de conteúdo
-        self.content_stack = QStackedWidget()
-        
-        self.dashboard_widget = DashboardWidget()
-        self.spreadsheet_widget = SpreadsheetWidget()
-        self.log_widget = LogWidget()
-        self.history_widget = HistoryWidget()
-        self.user_widget = UserWidget()
-        
-        self.content_stack.addWidget(self.dashboard_widget)
-        self.content_stack.addWidget(self.spreadsheet_widget)
-        self.content_stack.addWidget(self.log_widget)
-        self.content_stack.addWidget(self.history_widget)
-        self.content_stack.addWidget(self.user_widget)
-        
-        content_layout.addWidget(header)
-        content_layout.addWidget(self.content_stack)
-        
-        main_layout.addWidget(self.sidebar)
-        main_layout.addWidget(content_area)
-        
-        self._update_theme()
-    
-    def _connect_signals(self):
-        self.dashboard_widget.file_selected.connect(self._on_file_selected)
-        self.dashboard_widget.process_clicked.connect(self._on_process)
-    
-    def _switch_tab(self, tab_id: str):
-        # Atualizar botões
-        for tid, btn in self.tab_buttons.items():
-            btn.set_active(tid == tab_id)
-        
-        # Atualizar conteúdo
-        tab_indices = {
-            "dashboard": 0,
-            "spreadsheet": 1,
-            "log": 2,
-            "history": 3,
-            "user": 4,
-        }
-        
-        tab_titles = {
-            "dashboard": ("Dashboard", "Gerencie suas automações de NFS-e"),
-            "spreadsheet": ("Planilha", "Visualize os dados da planilha importada"),
-            "log": ("Log de Execução", "Acompanhe o processamento em tempo real"),
-            "history": ("Histórico", "Veja todos os processamentos realizados"),
-            "user": ("Meu Perfil", "Gerencie suas informações de usuário"),
-        }
-        
-        self.content_stack.setCurrentIndex(tab_indices[tab_id])
-        title, subtitle = tab_titles[tab_id]
-        self.page_title.setText(title)
-        self.page_subtitle.setText(subtitle)
-        self.current_tab = tab_id
-    
-    def _toggle_theme(self):
-        self.is_dark = not self.is_dark
-        self.theme_btn.setText("☀️" if self.is_dark else "🌙")
-        self._update_theme()
-    
-    def _update_theme(self):
-        theme = Theme.get_dark_theme() if self.is_dark else Theme.get_light_theme()
-        
-        # Estilo global
-        self.setStyleSheet(f"""
-            QMainWindow {{
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 {theme['background']},
-                    stop: 0.5 {theme['background_secondary']},
-                    stop: 1 {theme['background']}
-                );
-            }}
-            QWidget {{
-                color: {theme['foreground']};
-            }}
-        """)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
         
         # Sidebar
-        self.sidebar.set_theme(self.is_dark)
-        self.logo_text.setStyleSheet(f"color: {theme['foreground']}; font-size: 24px; font-weight: 700;")
-        self.status_dot.setStyleSheet(f"color: {theme['success']}; font-size: 10px;")
-        self.nav_label.setStyleSheet(f"color: {theme['foreground_secondary']}; font-size: 11px; font-weight: 600;")
+        self.sidebar = Sidebar(self)
+        self.sidebar.tab_changed.connect(self._on_tab_changed)
+        main_layout.addWidget(self.sidebar)
         
-        # Sidebar stats
-        self.sidebar_stats_card.set_theme(self.is_dark)
-        self.stats_title.setStyleSheet(f"color: {theme['foreground_secondary']}; font-size: 13px;")
-        self.stats_value.setStyleSheet(f"color: {theme['success']}; font-size: 24px; font-weight: 700;")
-        self.progress_bar.setStyleSheet(f"""
-            QProgressBar {{
-                background-color: {theme['glass_bg']};
-                border-radius: 4px;
+        # Content area
+        self.content_stack = QStackedWidget()
+        
+        self.dashboard_page = DashboardPage()
+        self.spreadsheet_page = SpreadsheetPage()
+        self.log_page = LogPage()
+        self.history_page = HistoryPage()
+        self.user_page = UserPage()
+        
+        self.content_stack.addWidget(self.dashboard_page)
+        self.content_stack.addWidget(self.spreadsheet_page)
+        self.content_stack.addWidget(self.log_page)
+        self.content_stack.addWidget(self.history_page)
+        self.content_stack.addWidget(self.user_page)
+        
+        main_layout.addWidget(self.content_stack)
+    
+    def _on_tab_changed(self, tab_id: str):
+        pages = {
+            "dashboard": 0,
+            "planilha": 1,
+            "log": 2,
+            "historico": 3,
+            "usuario": 4,
+        }
+        self.content_stack.setCurrentIndex(pages.get(tab_id, 0))
+    
+    def set_dark_mode(self, is_dark: bool):
+        self._is_dark = is_dark
+        self._apply_style()
+        
+        self.dashboard_page.set_dark_mode(is_dark)
+        self.spreadsheet_page.set_dark_mode(is_dark)
+        self.log_page.set_dark_mode(is_dark)
+        self.history_page.set_dark_mode(is_dark)
+        self.user_page.set_dark_mode(is_dark)
+    
+    def _apply_style(self):
+        theme = Theme.get_dark_theme() if self._is_dark else Theme.get_light_theme()
+        self.setStyleSheet(f"""
+            QMainWindow {{
+                background-color: {theme["background_secondary"]};
             }}
-            QProgressBar::chunk {{
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 0,
-                    stop: 0 {theme['success']},
-                    stop: 1 {theme['primary']}
-                );
-                border-radius: 4px;
+            QWidget {{
+                font-family: {Theme.FONT_FAMILY};
             }}
         """)
-        
-        # Header
-        self.page_title.setStyleSheet(f"color: {theme['foreground']}; font-size: 28px; font-weight: 700;")
-        self.page_subtitle.setStyleSheet(f"color: {theme['foreground_secondary']}; font-size: 14px;")
-        
-        # Botões
-        for btn in self.tab_buttons.values():
-            btn.set_theme(self.is_dark)
-        
-        self.theme_btn.set_theme(self.is_dark)
-        self.close_btn.set_theme(self.is_dark)
-        
-        # Widgets de conteúdo
-        self.dashboard_widget.set_theme(self.is_dark)
-        self.spreadsheet_widget.set_theme(self.is_dark)
-        self.log_widget.set_theme(self.is_dark)
-        self.history_widget.set_theme(self.is_dark)
-        self.user_widget.set_theme(self.is_dark)
-    
-    def _on_file_selected(self, file_path: str):
-        file_name = os.path.basename(file_path)
-        self.log_widget.add_log(f"Arquivo selecionado: {file_name}", LogType.INFO)
-    
-    def _on_process(self):
-        if not self.dashboard_widget.selected_file:
-            return
-        
-        file_name = os.path.basename(self.dashboard_widget.selected_file)
-        self.log_widget.add_log(f"Iniciando processamento de: {file_name}", LogType.INFO)
-        
-        # Simular processamento
-        QTimer.singleShot(500, lambda: self.log_widget.add_log("Lendo arquivo Excel...", LogType.INFO))
-        QTimer.singleShot(1000, lambda: self.log_widget.add_log("Validando dados...", LogType.INFO))
-        QTimer.singleShot(1500, lambda: self.log_widget.add_log("Processando 150 registros...", LogType.INFO))
-        QTimer.singleShot(2500, lambda: self._finish_processing(file_name))
-    
-    def _finish_processing(self, file_name: str):
-        self.log_widget.add_log("Processamento concluído com sucesso!", LogType.SUCCESS)
-        self.history_widget.add_entry(file_name, 150, "Sucesso", "2m 34s")
-        
-        QMessageBox.information(
-            self,
-            "Processamento Concluído",
-            f"O arquivo {file_name} foi processado com sucesso!\n\n"
-            "150 registros processados em 2m 34s."
-        )
 
-
-# ============== MAIN ==============
 
 def main():
-    # Habilitar DPI alto
-    QApplication.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
-    )
-    
     app = QApplication(sys.argv)
     
     # Configurar fonte padrão
-    font = QFont("Segoe UI", 10)
+    font = QFont(Theme.FONT_FAMILY, 10)
     app.setFont(font)
     
-    # Criar e mostrar janela
     window = MainWindow()
     window.show()
     
